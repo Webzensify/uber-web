@@ -7,8 +7,6 @@ const OwnerAuth = () => {
     const [isLoginSelected, setIsLoginSelected] = useState(true);
     return (
         <>
-
-
             {isLoginSelected ? <OwnerLogin /> : <OwnerRegister />}
             <div className='my-4'>
                 OR
