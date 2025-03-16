@@ -14,14 +14,14 @@ const otpSchema = phoneNumberSchema.extend({
 const schema = otpSchema.extend({
   name: z.string().min(1, 'Name is required'),
   address: z.string().min(1, 'Address is required'),
-  aadhaar: z.instanceof(File, 'Aadhaar Card/GSTN Number is required').refine(file => file && file.type.startsWith('image/'), 'Aadhaar must be an image'),
+  aadhaar: z.string().min(12, 'Aadhaar number must be exactly 12 digits').max(12, 'Aadhaar number must be exactly 12 digits'),
+  gstin: z.string().min(15, 'GSTIN must be exactly 15 characters').max(15, 'GSTIN must be exactly 15 characters'),
   email: z.string().email('Invalid email address'),
 });
 
 const OwnerRegister = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [aadhaarFileName, setAadhaarFileName] = useState('');
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(isOtpSent ? schema : phoneNumberSchema),
   });
 
@@ -30,16 +30,10 @@ const OwnerRegister = () => {
     setIsOtpSent(true);
     reset({ phoneNumber: data.phoneNumber });
   };
-
   const handleRegister = (data) => {
     // Logic to handle registration
-  };
-
-  const handleAadhaarUpload = (e) => {
-    const file = e.target.files[0];
-    setValue('aadhaar', file);
-    setAadhaarFileName(file.name);
-  };
+    
+  }
 
   return (
     <>
@@ -99,32 +93,26 @@ const OwnerRegister = () => {
           </div>
         )}
         <div className="mb-4">
-          <label htmlFor="aadhaar" className="block text-gray-700 text-sm font-bold mb-2">Aadhaar Card/GSTN Number</label>
+          <label htmlFor="aadhaar" className="block text-gray-700 text-sm font-bold mb-2">Aadhaar Number</label>
           <input
-            type="file"
+            type="text"
             id="aadhaar"
             {...register('aadhaar')}
-            onChange={handleAadhaarUpload}
             required
-            className="hidden"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
-          <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            <input
-              type="text"
-              value={aadhaarFileName}
-              placeholder="Choose a file"
-              readOnly
-              className="w-full bg-transparent border-none focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => document.getElementById('aadhaar').click()}
-              className="mt-2 bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Choose File
-            </button>
-          </div>
           {errors.aadhaar && <p className="text-red-500 text-xs italic">{errors.aadhaar.message}</p>}
+        </div>
+        <div className="mb-4">
+          <label htmlFor="gstin" className="block text-gray-700 text-sm font-bold mb-2">GSTIN</label>
+          <input
+            type="text"
+            id="gstin"
+            {...register('gstin')}
+            required
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+          {errors.gstin && <p className="text-red-500 text-xs italic">{errors.gstin.message}</p>}
         </div>
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email</label>

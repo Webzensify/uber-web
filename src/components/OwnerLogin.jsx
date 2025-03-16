@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 const phoneNumberSchema = z.object({
   phoneNumber: z.string().length(10, 'Phone number must be exactly 10 digits'),
 });
@@ -21,16 +23,27 @@ const OwnerLogin = () => {
     resolver: zodResolver(isOtpSent ? otpSchema : phoneNumberSchema),
   });
 
-  const handleSendOtp = (data) => {
-    // Logic to send OTP
-    setIsOtpSent(true);
-    reset({ phoneNumber: data.phoneNumber });
+  const handleSendOtp = async (data) => {
+    try {
+      await axios.post('/owner/send-otp', { phoneNumber: data.phoneNumber });
+      setIsOtpSent(true);
+      toast.success('OTP sent successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send OTP');
+    } finally {
+      reset({ phoneNumber: data.phoneNumber });
+    }
   };
 
-  const handleLogin = (data) => {
-    login(data, 'owner');
-    navigate('/dashboard');
-    
+  const handleLogin = async (data) => {
+    try {
+      const response = await axios.post('/owner/login', { phoneNumber: data.phoneNumber, otp: data.otp ,role:'owner'});
+      login(response.data.user, 'owner');
+      toast.success('Login successful');
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to login');
+    }
   };
 
   return (

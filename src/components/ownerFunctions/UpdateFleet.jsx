@@ -59,8 +59,8 @@ const UpdateFleet = () => {
             <option value="">Select Vehicle Type</option>
             <option value="Sedan">Sedan</option>
             <option value="SUV">SUV</option>
-            <option value="Van">Van</option>
-            <option value="Bus">Bus</option>
+            <option value="Hatchback">SUV</option>
+
           </select>
           {errors.vehicleType && <p className="text-red-500 text-xs italic">{errors.vehicleType.message}</p>}
         </div>
