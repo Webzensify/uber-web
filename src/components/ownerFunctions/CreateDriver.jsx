@@ -14,38 +14,28 @@ const otpSchema = phoneNumberSchema.extend({
 const schema = otpSchema.extend({
   name: z.string().min(1, 'Name is required'),
   address: z.string().min(1, 'Address is required'),
-  aadhaar: z.instanceof(File, 'Aadhaar Card is required').refine(file => file && file.type.startsWith('image/'), 'Aadhaar must be an image'),
-  license: z.instanceof(File, 'License is required').refine(file => file && file.type.startsWith('image/'), 'License must be an image'),
+  aadhaarNumber: z.string().min(1, 'Aadhaar Number is required'),
+  licenseNumber: z.string().min(1, 'License Number is required'),
 });
 
-const CreateDriver = () => {
+const CreateDriver = ({ addDriver }) => {
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [aadhaarFileName, setAadhaarFileName] = useState('');
-  const [licenseFileName, setLicenseFileName] = useState('');
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(isOtpSent ? schema : phoneNumberSchema),
+  const { register, handleSubmit, formState: { errors }, reset, getValues } = useForm({
+    resolver: zodResolver(isOtpSent ? otpSchema : schema),
   });
 
-  const handleSendOtp = (data) => {
-    // Logic to send OTP
+  const handleSendOtp = async (data) => {
+    // Call addDriver function to send OTP
+    await addDriver(data);
+    console.log(`form- ${data}`)
     setIsOtpSent(true);
-    reset({ phoneNumber: data.phoneNumber });
   };
 
-  const handleRegister = (data) => {
+  const handleRegister = async (data) => {
     // Logic to handle registration
-  };
-
-  const handleAadhaarUpload = (e) => {
-    const file = e.target.files[0];
-    setValue('aadhaar', file);
-    setAadhaarFileName(file.name);
-  };
-
-  const handleLicenseUpload = (e) => {
-    const file = e.target.files[0];
-    setValue('license', file);
-    setLicenseFileName(file.name);
+    await addDriver(data);
+    reset();
+    setIsOtpSent(false);
   };
 
   return (
@@ -87,15 +77,34 @@ const CreateDriver = () => {
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
             {errors.phoneNumber && <p className="text-red-500 text-xs italic">{errors.phoneNumber.message}</p>}
-            <button
-              type="button"
-              onClick={handleSubmit(handleSendOtp)}
-              className="mt-2 bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Send OTP
-            </button>
           </div>
-          {isOtpSent && (
+          <div className="w-full md:w-1/2 px-3">
+            <label htmlFor="aadhaarNumber" className="block text-gray-700 text-sm font-bold mb-2">Aadhaar Number</label>
+            <input
+              type="text"
+              id="aadhaarNumber"
+              {...register('aadhaarNumber')}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+            {errors.aadhaarNumber && <p className="text-red-500 text-xs italic">{errors.aadhaarNumber.message}</p>}
+          </div>
+        </div>
+        <div className="flex flex-wrap -mx-3 mb-4">
+          <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+            <label htmlFor="licenseNumber" className="block text-gray-700 text-sm font-bold mb-2">License Number</label>
+            <input
+              type="text"
+              id="licenseNumber"
+              {...register('licenseNumber')}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+            {errors.licenseNumber && <p className="text-red-500 text-xs italic">{errors.licenseNumber.message}</p>}
+          </div>
+        </div>
+        {isOtpSent && (
+          <div className="flex flex-wrap -mx-3 mb-4">
             <div className="w-full md:w-1/2 px-3">
               <label htmlFor="otp" className="block text-gray-700 text-sm font-bold mb-2">OTP</label>
               <input
@@ -107,66 +116,8 @@ const CreateDriver = () => {
               />
               {errors.otp && <p className="text-red-500 text-xs italic">{errors.otp.message}</p>}
             </div>
-          )}
-        </div>
-        <div className="flex flex-wrap -mx-3 mb-4">
-          <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
-            <label htmlFor="aadhaar" className="block text-gray-700 text-sm font-bold mb-2">Aadhaar Card</label>
-            <input
-              type="file"
-              id="aadhaar"
-              {...register('aadhaar')}
-              onChange={handleAadhaarUpload}
-              required
-              className="hidden"
-            />
-            <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-              <input
-                type="text"
-                value={aadhaarFileName}
-                placeholder="Choose a file"
-                readOnly
-                className="w-full bg-transparent border-none focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => document.getElementById('aadhaar').click()}
-                className="mt-2 bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
-                Choose File
-              </button>
-            </div>
-            {errors.aadhaar && <p className="text-red-500 text-xs italic">{errors.aadhaar.message}</p>}
           </div>
-          <div className="w-full md:w-1/2 px-3">
-            <label htmlFor="license" className="block text-gray-700 text-sm font-bold mb-2">License</label>
-            <input
-              type="file"
-              id="license"
-              {...register('license')}
-              onChange={handleLicenseUpload}
-              required
-              className="hidden"
-            />
-            <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-              <input
-                type="text"
-                value={licenseFileName}
-                placeholder="Choose a file"
-                readOnly
-                className="w-full bg-transparent border-none focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => document.getElementById('license').click()}
-                className="mt-2 bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
-                Choose File
-              </button>
-            </div>
-            {errors.license && <p className="text-red-500 text-xs italic">{errors.license.message}</p>}
-          </div>
-        </div>
+        )}
         <div className="flex items-center justify-between">
           <button type="submit" className="bg-primary-dark w-full text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             {isOtpSent ? 'Register' : 'Send OTP'}

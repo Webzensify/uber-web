@@ -25,7 +25,7 @@ const OwnerLogin = () => {
 
   const handleSendOtp = async (data) => {
     try {
-      await axios.post('/owner/send-otp', { phoneNumber: data.phoneNumber });
+      await axios.post('/api/auth/login', { mobileNumber: data.phoneNumber, role: 'owner' });
       setIsOtpSent(true);
       toast.success('OTP sent successfully');
     } catch (err) {
@@ -37,7 +37,7 @@ const OwnerLogin = () => {
 
   const handleLogin = async (data) => {
     try {
-      const response = await axios.post('/owner/login', { phoneNumber: data.phoneNumber, otp: data.otp ,role:'owner'});
+      const response = await axios.post('api/auth/login', { phoneNumber: data.phoneNumber, otp: data.otp ,role:'owner'});
       login(response.data.user, 'owner');
       toast.success('Login successful');
       navigate('/dashboard');
