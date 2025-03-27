@@ -11,8 +11,5 @@ axios.defaults.baseURL = 'http://localhost:3000';
 
 
 createRoot(document.getElementById('root')).render(
-    <AuthProvider>
-        <App />
-        <ToastContainer />
-    </AuthProvider>
+    <App />
 );

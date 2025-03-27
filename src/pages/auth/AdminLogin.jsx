@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 
 const phoneNumberSchema = z.object({
   phoneNumber: z.string().length(10, 'Phone number must be exactly 10 digits'),
@@ -13,24 +16,59 @@ const otpSchema = phoneNumberSchema.extend({
 
 const AdminLogin = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [adminType, setAdminType] = useState('admin'); // Default to 'admin'
+  const { login } = useAuth();
+
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(isOtpSent ? otpSchema : phoneNumberSchema),
   });
 
-  const handleSendOtp = (data) => {
-    // Logic to send OTP
-    setIsOtpSent(true);
-    reset({ phoneNumber: data.phoneNumber });
+  const handleSendOtp = async (data) => {
+    try {
+      await axios.post('/api/auth/send-otp', { mobileNumber: data.phoneNumber, role: adminType });
+      setIsOtpSent(true);
+      toast.success('OTP sent successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Failed to send OTP');
+    } finally {
+      reset({ mobileNumber: data.phoneNumber });
+    }
   };
 
-  const handleLogin = (data) => {
-    // Logic to verify OTP and login
+  const handleLogin = async (data) => {
+    try {
+      const response = await axios.post('/api/auth/login', {
+        mobileNumber: data.phoneNumber,
+        otp: data.otp,
+        role: adminType,
+      });
+      const { entity, token } = response.data;
+
+      // Use AuthProvider's login method
+      login(entity, adminType, token);
+
+      toast.success('Login successful');
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Failed to login');
+    }
   };
 
   return (
     <>
       <h2 className="text-2xl text-left font-bold my-6">Admin Login</h2>
       <form className="w-full" onSubmit={handleSubmit(isOtpSent ? handleLogin : handleSendOtp)}>
+        <div className="my-4">
+          <label htmlFor="adminType" className="block text-gray-700 text-sm font-bold mb-2">Admin Type</label>
+          <select
+            id="adminType"
+            value={adminType}
+            onChange={(e) => setAdminType(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          >
+            <option value="admin">Main Admin</option>
+            <option value="operational admin">Operational Admin</option>
+          </select>
+        </div>
         <div className="my-4">
           <label htmlFor="phoneNumber" className="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
           <input

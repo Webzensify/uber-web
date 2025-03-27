@@ -2,56 +2,81 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
-const phoneNumberSchema = z.object({
-  phoneNumber: z.string().length(10, 'Phone number must be exactly 10 digits'),
-});
-
-const otpSchema = phoneNumberSchema.extend({
-  otp: z.string().length(6, 'OTP must be exactly 6 digits'),
-});
-
-const schema = otpSchema.extend({
+const schema = z.object({
+  mobileNumber: z.string().length(10, 'Mobile number must be exactly 10 digits'),
+  otp: z.string().length(6, 'OTP must be exactly 6 digits').optional(),
   name: z.string().min(1, 'Name is required'),
   address: z.string().min(1, 'Address is required'),
-  aadhaar: z.instanceof(File, 'Aadhaar Card is required').refine(file => file && file.type.startsWith('image/'), 'Aadhaar must be an image'),
-  license: z.instanceof(File, 'License is required').refine(file => file && file.type.startsWith('image/'), 'License must be an image'),
+  aadhaarNumber: z.string().length(12, 'Aadhaar number must be exactly 12 digits'),
+  licenseNumber: z.string().min(1, 'License number is required'),
+  email: z.string().email('Invalid email address'),
 });
 
 const CreateDriver = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [aadhaarFileName, setAadhaarFileName] = useState('');
-  const [licenseFileName, setLicenseFileName] = useState('');
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(isOtpSent ? schema : phoneNumberSchema),
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: zodResolver(schema),
   });
 
-  const handleSendOtp = (data) => {
-    // Logic to send OTP
-    setIsOtpSent(true);
-    reset({ phoneNumber: data.phoneNumber });
+  // Send OTP to the driver
+  const handleSendOtp = async (data) => {
+    try {
+      await axios.post('/api/auth/send-otp', { mobileNumber: data.mobileNumber, role: 'driver' }, {
+        headers: {
+          authtoken: localStorage.getItem('token'),
+          role: localStorage.getItem('userType'),
+        },
+      });
+      setIsOtpSent(true);
+      toast.success('OTP sent successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Failed to send OTP');
+    }
   };
 
-  const handleRegister = (data) => {
-    // Logic to handle registration
+  // Register the driver
+  const handleRegister = async (data) => {
+    try {
+      await axios.post('/api/auth/addDriver', {
+        mobileNumber: data.mobileNumber,
+        name: data.name,
+        address: data.address,
+        licenseNumber: data.licenseNumber,
+        aadhaarNumber: data.aadhaarNumber,
+        email: data.email,
+        role: 'driver',
+        otp: data.otp,
+      }, {
+        headers: {
+          authtoken: localStorage.getItem('token'),
+          role: localStorage.getItem('userType'),
+        },
+      });
+      toast.success('Driver registered successfully');
+      reset();
+      setIsOtpSent(false);
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response?.data?.msg || 'Failed to register driver');
+    }
   };
 
-  const handleAadhaarUpload = (e) => {
-    const file = e.target.files[0];
-    setValue('aadhaar', file);
-    setAadhaarFileName(file.name);
-  };
-
-  const handleLicenseUpload = (e) => {
-    const file = e.target.files[0];
-    setValue('license', file);
-    setLicenseFileName(file.name);
+  // Handle form submission
+  const onSubmit = (data) => {
+    if (!isOtpSent) {
+      handleSendOtp(data);
+    } else {
+      handleRegister(data);
+    }
   };
 
   return (
-    <div className='px-6 py-4'>
+    <div className="px-6 py-4">
       <h2 className="text-2xl font-bold my-4">Create Driver</h2>
-      <form className="w-full" onSubmit={handleSubmit(isOtpSent ? handleRegister : handleSendOtp)}>
+      <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-wrap -mx-3 mb-4">
           <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
             <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">Name</label>
@@ -78,25 +103,54 @@ const CreateDriver = () => {
         </div>
         <div className="flex flex-wrap -mx-3 mb-4">
           <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
-            <label htmlFor="phoneNumber" className="block text-gray-700 text-sm font-bold mb-2">Mobile Number</label>
+            <label htmlFor="mobileNumber" className="block text-gray-700 text-sm font-bold mb-2">Mobile Number</label>
             <input
               type="tel"
-              id="phoneNumber"
-              {...register('phoneNumber')}
+              id="mobileNumber"
+              {...register('mobileNumber')}
               required
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
-            {errors.phoneNumber && <p className="text-red-500 text-xs italic">{errors.phoneNumber.message}</p>}
-            <button
-              type="button"
-              onClick={handleSubmit(handleSendOtp)}
-              className="mt-2 bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Send OTP
-            </button>
+            {errors.mobileNumber && <p className="text-red-500 text-xs italic">{errors.mobileNumber.message}</p>}
           </div>
-          {isOtpSent && (
-            <div className="w-full md:w-1/2 px-3">
+          <div className="w-full md:w-1/2 px-3">
+            <label htmlFor="aadhaarNumber" className="block text-gray-700 text-sm font-bold mb-2">Aadhaar Number</label>
+            <input
+              type="text"
+              id="aadhaarNumber"
+              {...register('aadhaarNumber')}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+            {errors.aadhaarNumber && <p className="text-red-500 text-xs italic">{errors.aadhaarNumber.message}</p>}
+          </div>
+        </div>
+        <div className="flex flex-wrap -mx-3 mb-4">
+          <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+            <label htmlFor="licenseNumber" className="block text-gray-700 text-sm font-bold mb-2">License Number</label>
+            <input
+              type="text"
+              id="licenseNumber"
+              {...register('licenseNumber')}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+            {errors.licenseNumber && <p className="text-red-500 text-xs italic">{errors.licenseNumber.message}</p>}
+          </div>
+          <div className="w-full md:w-1/2 px-3">
+            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email</label>
+            <input
+              type="email"
+              id="email"
+              {...register('email')}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+            {errors.email && <p className="text-red-500 text-xs italic">{errors.email.message}</p>}
+          </div>
+        </div>
+        {isOtpSent && (
+          <div className="flex flex-wrap -mx-3 mb-4">
+            <div className="w-full px-3">
               <label htmlFor="otp" className="block text-gray-700 text-sm font-bold mb-2">OTP</label>
               <input
                 type="text"
@@ -107,66 +161,8 @@ const CreateDriver = () => {
               />
               {errors.otp && <p className="text-red-500 text-xs italic">{errors.otp.message}</p>}
             </div>
-          )}
-        </div>
-        <div className="flex flex-wrap -mx-3 mb-4">
-          <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
-            <label htmlFor="aadhaar" className="block text-gray-700 text-sm font-bold mb-2">Aadhaar Card</label>
-            <input
-              type="file"
-              id="aadhaar"
-              {...register('aadhaar')}
-              onChange={handleAadhaarUpload}
-              required
-              className="hidden"
-            />
-            <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-              <input
-                type="text"
-                value={aadhaarFileName}
-                placeholder="Choose a file"
-                readOnly
-                className="w-full bg-transparent border-none focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => document.getElementById('aadhaar').click()}
-                className="mt-2 bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
-                Choose File
-              </button>
-            </div>
-            {errors.aadhaar && <p className="text-red-500 text-xs italic">{errors.aadhaar.message}</p>}
           </div>
-          <div className="w-full md:w-1/2 px-3">
-            <label htmlFor="license" className="block text-gray-700 text-sm font-bold mb-2">License</label>
-            <input
-              type="file"
-              id="license"
-              {...register('license')}
-              onChange={handleLicenseUpload}
-              required
-              className="hidden"
-            />
-            <div className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-              <input
-                type="text"
-                value={licenseFileName}
-                placeholder="Choose a file"
-                readOnly
-                className="w-full bg-transparent border-none focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => document.getElementById('license').click()}
-                className="mt-2 bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
-                Choose File
-              </button>
-            </div>
-            {errors.license && <p className="text-red-500 text-xs italic">{errors.license.message}</p>}
-          </div>
-        </div>
+        )}
         <div className="flex items-center justify-between">
           <button type="submit" className="bg-primary-dark w-full text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             {isOtpSent ? 'Register' : 'Send OTP'}

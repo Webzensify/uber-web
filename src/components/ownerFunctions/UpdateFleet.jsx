@@ -1,136 +1,207 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FaDeleteLeft } from 'react-icons/fa6';
-import { FiDelete } from 'react-icons/fi';
 import { FaTrashAlt } from 'react-icons/fa';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const fleetSchema = z.object({
-  vehicleType: z.string().min(1, 'Vehicle type is required'),
-  vehicleModel: z.string().min(1, 'Vehicle model is required'),
-  vehicleCapacity: z.number().min(1, 'Vehicle capacity must be at least 1'),
-  vehicleRegistration: z.instanceof(File, 'Vehicle registration is required').refine(file => file && file.type.startsWith('image/'), 'Vehicle registration must be an image'),
-  vehicleNoPlate: z.string().min(1, 'Vehicle number plate is required'),
-  vehicleDescription: z.string().min(1, 'Vehicle description is required'),
+  _id: z.string().optional(), // For editing existing vehicles
+  model: z.string().min(1, 'Model is required'),
+  brand: z.string().min(1, 'Brand is required'),
+  type: z.string().min(1, 'Type is required'),
+  seats: z.number().min(1, 'Seats must be at least 1'),
+  number: z.string().min(1, 'Number is required'),
+  year: z.number().min(1900, 'Year must be valid'),
+  desc: z.string().min(1, 'Description is required'),
 });
 
 const UpdateFleet = () => {
-  const [fleets, setFleets] = useState([
-    {
-      vehicleType: 'Sedan',
-      vehicleModel: 'Toyota Camry',
-      vehicleCapacity: 5,
-      vehicleNoPlate: 'ABC123',
-      vehicleDescription: 'Comfortable sedan with air conditioning',
-    },
-    {
-      vehicleType: 'SUV',
-      vehicleModel: 'Honda CR-V',
-      vehicleCapacity: 7,
-      vehicleNoPlate: 'XYZ789',
-      vehicleDescription: 'Spacious SUV with ample luggage space',
-    },
-  ]);
-
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const [fleets, setFleets] = useState([]);
+  const [isEditing, setIsEditing] = useState(false); // Track if editing
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(fleetSchema),
   });
 
-  const handleRegistrationUpload = (e) => {
-    setValue('vehicleRegistration', e.target.files[0]);
+  // Fetch fleet data from the backend
+  const fetchFleets = async () => {
+    try {
+      const response = await axios.get('/api/owner/getCars', {
+        headers: {
+          authtoken: localStorage.getItem('token'),
+          role: localStorage.getItem('userType'),
+        },
+      });
+      setFleets(response.data.cars);
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Failed to fetch fleet data');
+    }
   };
 
-  const onSubmit = (data) => {
-    setFleets([...fleets, data]);
+  // Add or update a vehicle in the fleet
+  const onSubmit = async (data) => {
+    try {
+      if (data._id) {
+        // Update vehicle
+        const response = await axios.put(`/api/owner/editCar/${data._id}`, data, {
+          headers: {
+            authtoken: localStorage.getItem('token'),
+            role: localStorage.getItem('userType'),
+          },
+        });
+        toast.success('Vehicle updated successfully');
+        setFleets(fleets.map((fleet) => (fleet._id === data._id ? response.data.car : fleet)));
+      } else {
+        // Add new vehicle
+        const response = await axios.post('/api/owner/addCar', data, {
+          headers: {
+            authtoken: localStorage.getItem('token'),
+            role: localStorage.getItem('userType'),
+          },
+        });
+        toast.success('Vehicle added successfully');
+        setFleets([...fleets, response.data.car]);
+      }
+      reset(); // Reset the form
+      setIsEditing(false); // Reset editing state
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Failed to save vehicle');
+    }
   };
+
+  // Delete a vehicle from the fleet
+  const handleDelete = async (id) => {
+    try {
+      await axios.get(`/api/owner/deleteCar/${id}`, {
+        headers: {
+          authtoken: localStorage.getItem('token'),
+          role: localStorage.getItem('userType'),
+        },
+      });
+      toast.success('Vehicle deleted successfully');
+      setFleets(fleets.filter((fleet) => fleet._id !== id));
+    } catch (err) {
+      toast.error(err.response?.data?.msg || 'Failed to delete vehicle');
+    }
+  };
+
+  // Populate form for editing
+  const handleEdit = (fleet) => {
+    reset(fleet); // Populate the form with the selected fleet data
+    setIsEditing(true); // Set editing state
+  };
+
+  useEffect(() => {
+    fetchFleets();
+  }, []);
 
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Update Fleet</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <input type="hidden" {...register('_id')} />
         <div>
-          <label htmlFor="vehicleType" className="block text-gray-700">Vehicle Type</label>
-          <select
-            id="vehicleType"
-            {...register('vehicleType')}
-            className="w-full p-2 border rounded"
-          >
-            <option value="">Select Vehicle Type</option>
+          <label htmlFor="model" className="block text-gray-700 font-bold">Model</label>
+          <select id="model" {...register('model')} className="w-full p-2 border rounded">
+            <option value="">Select Model</option>
             <option value="Sedan">Sedan</option>
             <option value="SUV">SUV</option>
-            <option value="Hatchback">SUV</option>
-
+            <option value="Hatchback">Hatchback</option>
           </select>
-          {errors.vehicleType && <p className="text-red-500 text-xs italic">{errors.vehicleType.message}</p>}
+          {errors.model && <p className="text-red-500 text-xs italic">{errors.model.message}</p>}
         </div>
         <div>
-          <label htmlFor="vehicleModel" className="block text-gray-700">Vehicle Model</label>
+          <label htmlFor="brand" className="block text-gray-700 font-bold">Brand</label>
+          <select id="brand" {...register('brand')} className="w-full p-2 border rounded">
+            <option value="">Select Brand</option>
+            <option value="Toyota">Toyota</option>
+            <option value="Honda">Honda</option>
+            <option value="Ford">Ford</option>
+          </select>
+          {errors.brand && <p className="text-red-500 text-xs italic">{errors.brand.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="type" className="block text-gray-700 font-bold">Type</label>
+          <select id="type" {...register('type')} className="w-full p-2 border rounded">
+            <option value="">Select Type</option>
+            <option value="Manual">Manual</option>
+            <option value="Automatic">Automatic</option>
+          </select>
+          {errors.type && <p className="text-red-500 text-xs italic">{errors.type.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="seats" className="block text-gray-700 font-bold">Seats</label>
+          <select id="seats" {...register('seats', { valueAsNumber: true })} className="w-full p-2 border rounded">
+            <option value="">Select Seats</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+          </select>
+          {errors.seats && <p className="text-red-500 text-xs italic">{errors.seats.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="number" className="block text-gray-700 font-bold">Number</label>
           <input
             type="text"
-            id="vehicleModel"
-            {...register('vehicleModel')}
+            id="number"
+            {...register('number')}
             className="w-full p-2 border rounded"
           />
-          {errors.vehicleModel && <p className="text-red-500 text-xs italic">{errors.vehicleModel.message}</p>}
+          {errors.number && <p className="text-red-500 text-xs italic">{errors.number.message}</p>}
         </div>
         <div>
-          <label htmlFor="vehicleCapacity" className="block text-gray-700">Vehicle Capacity</label>
-          <input
-            type="number"
-            id="vehicleCapacity"
-            {...register('vehicleCapacity', { valueAsNumber: true })}
-            className="w-full p-2 border rounded"
-          />
-          {errors.vehicleCapacity && <p className="text-red-500 text-xs italic">{errors.vehicleCapacity.message}</p>}
+          <label htmlFor="year" className="block text-gray-700 font-bold">Year</label>
+          <select id="year" {...register('year', { valueAsNumber: true })} className="w-full p-2 border rounded">
+            <option value="">Select Year</option>
+            {Array.from({ length: 30 }, (_, i) => {
+              const year = new Date().getFullYear() - i;
+              return <option key={year} value={year}>{year}</option>;
+            })}
+          </select>
+          {errors.year && <p className="text-red-500 text-xs italic">{errors.year.message}</p>}
         </div>
         <div>
-          <label htmlFor="vehicleRegistration" className="block text-gray-700">Vehicle Registration</label>
-          <input
-            type="file"
-            id="vehicleRegistration"
-            onChange={handleRegistrationUpload}
-            className="w-full p-2 border rounded"
-          />
-          {errors.vehicleRegistration && <p className="text-red-500 text-xs italic">{errors.vehicleRegistration.message}</p>}
-        </div>
-        <div>
-          <label htmlFor="vehicleNoPlate" className="block text-gray-700">Vehicle No. Plate</label>
-          <input
-            type="text"
-            id="vehicleNoPlate"
-            {...register('vehicleNoPlate')}
-            className="w-full p-2 border rounded"
-          />
-          {errors.vehicleNoPlate && <p className="text-red-500 text-xs italic">{errors.vehicleNoPlate.message}</p>}
-        </div>
-        <div>
-          <label htmlFor="vehicleDescription" className="block text-gray-700">Vehicle Description</label>
+          <label htmlFor="desc" className="block text-gray-700 font-bold">Description</label>
           <textarea
-            id="vehicleDescription"
-            {...register('vehicleDescription')}
+            id="desc"
+            {...register('desc')}
             className="w-full p-2 border rounded"
           />
-          {errors.vehicleDescription && <p className="text-red-500 text-xs italic">{errors.vehicleDescription.message}</p>}
+          {errors.desc && <p className="text-red-500 text-xs italic">{errors.desc.message}</p>}
         </div>
-        <button type="submit" className="bg-primary-dark text-white py-2 px-5 rounded">Submit</button>
+        <button type="submit" className="bg-primary-dark text-white py-2 px-5 rounded">
+          {isEditing ? 'Edit' : 'Submit'}
+        </button>
       </form>
 
-      <h2 className="text-2xl font-bold mt-8 mb-4 overflow-clip ">Fleet List</h2>
-      <div className="space-y-4 space-x-2 flex flex-wrap overflow-clip ">
-        {fleets.map((fleet, index) => (
-          <div key={index} className="p-4 border rounded shadow-sm flex md:w-9/19 lg:md:1/3 justify-between h-42">
+      <h2 className="text-2xl font-bold mt-8 mb-4">Fleet List</h2>
+      <div className="space-y-4">
+        {fleets.map((fleet) => (
+          <div key={fleet._id} className="p-4 border rounded shadow-sm flex justify-between">
             <div>
-            <p><strong>Type:</strong> {fleet.vehicleType}</p>
-            <p><strong>Model:</strong> {fleet.vehicleModel}</p>
-            <p><strong>Capacity:</strong> {fleet.vehicleCapacity}</p>
-            <p><strong>No. Plate:</strong> {fleet.vehicleNoPlate}</p>
-            <p><strong>Description:</strong> {fleet.vehicleDescription}</p>
+              <p><strong>Model:</strong> {fleet.model}</p>
+              <p><strong>Brand:</strong> {fleet.brand}</p>
+              <p><strong>Type:</strong> {fleet.type}</p>
+              <p><strong>Seats:</strong> {fleet.seats}</p>
+              <p><strong>Number:</strong> {fleet.number}</p>
+              <p><strong>Year:</strong> {fleet.year}</p>
+              <p><strong>Description:</strong> {fleet.desc}</p>
             </div>
-            <div>
-            <button className="bg-red-500 text-white py-1 px-3 rounded mt-2">
-              <FaTrashAlt />
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handleEdit(fleet)}
+                className="bg-blue-500 text-white py-1 px-3 rounded"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(fleet._id)}
+                className="bg-red-500 text-white py-1 px-3 rounded"
+              >
+                <FaTrashAlt />
+              </button>
             </div>
           </div>
         ))}

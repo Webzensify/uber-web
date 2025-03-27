@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { FaUserPlus, FaUsers, FaCar, FaTasks, FaSignOutAlt, FaBars } from 'react-icons/fa';
-
-const Sidebar = ({ expanded, setExpanded, setCurrentView }) => {
+import { useAuth } from '../context/AuthContext';
+const OwnerSidebar = ({ expanded, setExpanded, setCurrentView }) => {
   const [selected, setSelected] = useState('CreateDriver');
-
+  const {logout } = useAuth();
   const handleItemClick = (view) => {
     setCurrentView(view);
     setSelected(view);
   };
 
-  const handleLogout = (e) => {
-    // handle logout here
-  }
+  const handleLogout = () => {
+    
+    console.log('Logging out...');
+    logout();
+    
+  };
 
   return (
     <aside className={`min-h-max min-w-[100vw] absolute sm:static sm:translate-x-0 ${!expanded && "-translate-x-full"} sm:min-w-min transition-all`}>
@@ -65,7 +68,7 @@ const Sidebar = ({ expanded, setExpanded, setCurrentView }) => {
   );
 };
 
-export default Sidebar;
+export default OwnerSidebar;
 
 function SideBarItems({ icon, text, expanded, onClick, selected }) {
   return (

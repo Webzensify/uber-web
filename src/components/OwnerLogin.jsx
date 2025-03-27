@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
+
 const phoneNumberSchema = z.object({
   phoneNumber: z.string().length(10, 'Phone number must be exactly 10 digits'),
 });
@@ -16,8 +16,7 @@ const otpSchema = phoneNumberSchema.extend({
 
 const OwnerLogin = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const {login } = useAuth();
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(isOtpSent ? otpSchema : phoneNumberSchema),
@@ -25,11 +24,11 @@ const OwnerLogin = () => {
 
   const handleSendOtp = async (data) => {
     try {
-      await axios.post('/owner/send-otp', { phoneNumber: data.phoneNumber });
+      await axios.post('/api/auth/send-otp', { phoneNumber: data.phoneNumber, role: 'owner' });
       setIsOtpSent(true);
       toast.success('OTP sent successfully');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send OTP');
+      toast.error(err.response?.data?.msg || 'Failed to send OTP');
     } finally {
       reset({ phoneNumber: data.phoneNumber });
     }
@@ -37,12 +36,19 @@ const OwnerLogin = () => {
 
   const handleLogin = async (data) => {
     try {
-      const response = await axios.post('/owner/login', { phoneNumber: data.phoneNumber, otp: data.otp ,role:'owner'});
-      login(response.data.user, 'owner');
+      const response = await axios.post('/api/auth/login', {
+        phoneNumber: data.phoneNumber,
+        otp: data.otp,
+        role: 'owner',
+      });
+      const { entity, token } = response.data;
+
+      // Use AuthProvider's login method
+      login(entity, 'owner', token);
+
       toast.success('Login successful');
-      navigate('/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to login');
+      toast.error(err.response?.data?.msg || 'Failed to login');
     }
   };
 

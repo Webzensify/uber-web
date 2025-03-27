@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
+import Header from '../../components/Header.jsx';
 import { CreateDriver, UpdateFleet, ViewDriver, ViewRides } from '../../components/ownerFunctions/index.js';
+import OwnerSidebar from '../../components/OwnerSidebar.jsx';
 
-const Dashboard = () => {
+const OwnerDashboard = () => {
   const [expanded, setExpanded] = useState(false);
   const [currentView, setCurrentView] = useState('CreateDriver');
 
@@ -24,7 +24,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex bg-white min-h-screen">
-      <Sidebar expanded={expanded} setExpanded={setExpanded} setCurrentView={setCurrentView} />
+      <OwnerSidebar expanded={expanded} setExpanded={setExpanded} setCurrentView={setCurrentView} />
       <div className="w-full overflow-hidden">
         <Header setExpanded={setExpanded} />
         {renderView()}
@@ -33,4 +33,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default OwnerDashboard;
