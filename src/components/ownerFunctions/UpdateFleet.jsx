@@ -63,7 +63,7 @@ const UpdateFleet = () => {
         toast.success('Vehicle added successfully');
         setFleets([...fleets, response.data.car]);
       }
-      reset(); // Reset the form
+      reset();
       setIsEditing(false); // Reset editing state
     } catch (err) {
       toast.error(err.response?.data?.msg || 'Failed to save vehicle');
