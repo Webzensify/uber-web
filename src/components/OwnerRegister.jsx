@@ -45,6 +45,7 @@ const OwnerRegister = () => {
         address: data.address,
         aadhaarNumber: data.aadhaar,
         email: data.email,
+        role: 'owner',
       });
       const { entity, token } = response.data;
 

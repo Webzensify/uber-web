@@ -73,7 +73,7 @@ const UpdateFleet = () => {
   // Delete a vehicle from the fleet
   const handleDelete = async (id) => {
     try {
-      await axios.get(`/api/owner/deleteCar/${id}`, {
+      await axios.delete(`/api/owner/deleteCar/${id}`, {
         headers: {
           authtoken: localStorage.getItem('token'),
           role: localStorage.getItem('userType'),
