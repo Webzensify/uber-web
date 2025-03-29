@@ -27,7 +27,12 @@ const ManageOpAdmin = () => {
   // Submit handler
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post('/api/admin/appointOperationalAdmin', data, {
+      const response = await axios.post('/api/admin/appointOperationalAdmin', {
+        name: data.name,
+        email: data.email,
+        mobileNumber: `+91${data.mobileNumber}`,
+        role: 'admin',
+      }, {
         headers: {
           authtoken: localStorage.getItem('token'),
           role: localStorage.getItem('userType'),

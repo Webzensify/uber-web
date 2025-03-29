@@ -24,7 +24,7 @@ const CreateDriver = () => {
   // Send OTP to the driver
   const handleSendOtp = async (data) => {
     try {
-      await axios.post('/api/auth/send-otp', { mobileNumber: data.mobileNumber, role: 'driver' }, {
+      await axios.post('/api/auth/send-otp', { mobileNumber: `+91${data.mobileNumber}`, role: 'driver' }, {
         headers: {
           authtoken: localStorage.getItem('token'),
           role: localStorage.getItem('userType'),
