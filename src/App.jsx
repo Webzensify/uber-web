@@ -15,6 +15,7 @@ const App = () => {
         <Route path="/" element={<AuthLayout />} />
         <Route path="/ownerDashboard" element={<OwnerDashboard />}/>
         <Route path="/adminDashboard" element={<AdminDashboard/>} />
+        
         <Route path="*" element={<h1>Not Found</h1>} />
 
       </Routes>
