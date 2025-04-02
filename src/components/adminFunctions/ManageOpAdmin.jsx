@@ -1,17 +1,15 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 // Define Zod schema for validation
 const operationalAdminSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters long'),
-  email: z.string().email('Invalid email address'),
-  mobileNumber: z
-    .string()
-    .regex(/^\d{10}$/, 'Mobile number must be 10 digits'),
+  name: z.string().min(2, "Name must be at least 2 characters long"),
+  email: z.string().email("Invalid email address"),
+  mobileNumber: z.string().regex(/^\d{10}$/, "Mobile number must be 10 digits"),
 });
 
 const ManageOpAdmin = () => {
@@ -27,21 +25,39 @@ const ManageOpAdmin = () => {
   // Submit handler
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post('/api/admin/appointOperationalAdmin', {
-        name: data.name,
-        email: data.email,
-        mobileNumber: `+91${data.mobileNumber}`,
-        role: 'admin',
-      }, {
-        headers: {
-          authtoken: localStorage.getItem('token'),
-          role: localStorage.getItem('userType'),
+      if (
+        !window.confirm(
+          "Are you sure you want to create this Operational Admin?"
+        )
+      ) {
+        return;
+      }
+      const response = await axios.post(
+        "/api/admin/appointOperationalAdmin",
+        {
+          name: data.name,
+          email: data.email,
+          mobileNumber: `+91${data.mobileNumber}`,
+          role: "admin",
         },
-      });
-      toast.success(response.data.msg || 'Operational Admin created successfully');
+        {
+          headers: {
+            authtoken: localStorage.getItem("token"),
+            role: localStorage.getItem("userType"),
+          },
+        }
+      );
+      print(data);
+      print(response.data);
+      toast.success(
+        response.data.msg || "Operational Admin created successfully"
+      );
       reset(); // Reset the form after successful submission
     } catch (error) {
-      toast.error(error.response?.data?.msg || 'Failed to create Operational Admin');
+      toast.error(
+        error.response?.data?.msg + error.response?.data?.error ||
+          "Failed to create Operational Admin"
+      );
     }
   };
 
@@ -54,11 +70,13 @@ const ManageOpAdmin = () => {
           <label className="block font-medium mb-1">Name</label>
           <input
             type="text"
-            {...register('name')}
+            {...register("name")}
             className="w-full p-2 border rounded"
             placeholder="Enter name"
           />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+          {errors.name && (
+            <p className="text-red-500 text-sm">{errors.name.message}</p>
+          )}
         </div>
 
         {/* Email Field */}
@@ -66,11 +84,13 @@ const ManageOpAdmin = () => {
           <label className="block font-medium mb-1">Email</label>
           <input
             type="email"
-            {...register('email')}
+            {...register("email")}
             className="w-full p-2 border rounded"
             placeholder="Enter email"
           />
-          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email.message}</p>
+          )}
         </div>
 
         {/* Mobile Number Field */}
@@ -78,12 +98,14 @@ const ManageOpAdmin = () => {
           <label className="block font-medium mb-1">Mobile Number</label>
           <input
             type="text"
-            {...register('mobileNumber')}
+            {...register("mobileNumber")}
             className="w-full p-2 border rounded"
             placeholder="Enter mobile number"
           />
           {errors.mobileNumber && (
-            <p className="text-red-500 text-sm">{errors.mobileNumber.message}</p>
+            <p className="text-red-500 text-sm">
+              {errors.mobileNumber.message}
+            </p>
           )}
         </div>
 

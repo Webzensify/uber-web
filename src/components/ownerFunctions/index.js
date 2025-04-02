@@ -1,12 +1,6 @@
 import CreateDriver from "./CreateDriver";
-import UpdateFleet from "./UpdateFleet";
+import Fleet from "./Fleet";
 import ViewDriver from "./ViewDriver";
 import ViewRides from "./ViewRides";
 
-
-export {
-    CreateDriver,
-    UpdateFleet,
-    ViewDriver,
-    ViewRides
-}
+export { CreateDriver, Fleet, ViewDriver, ViewRides };
