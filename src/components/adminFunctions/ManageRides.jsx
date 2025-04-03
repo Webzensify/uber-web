@@ -13,13 +13,14 @@ const ManageRides = () => {
   // Fetch all rides from the backend
   const fetchRides = async () => {
     try {
-      setLoading(true); // Set loading to true before fetching
+      setLoading(true); 
       const response = await axios.get("/api/admin/allRides", {
         headers: {
           authtoken: localStorage.getItem("token"),
           role: localStorage.getItem("userType"),
         },
       });
+      console.log("Fetched rides:", response.data.rides);
       setRides(response.data.rides || []); // Ensure rides is always an array
     } catch (error) {
       toast.error(
@@ -44,8 +45,8 @@ const ManageRides = () => {
     }
 
     try {
-      const response = await axios.post(
-        "/api/ride/cancel",
+      const response = await axios.put(
+        `/api/admin/cancelRide/${rideId}`,
         { rideId, reason },
         {
           headers: {

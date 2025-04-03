@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 
 // Define Zod schema for validation
 const operationalAdminSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters long"),
+  name: z.string().min(1, "Name is required").regex(/^[a-zA-Z\s]+$/, "Name must contain only letters"),
   email: z.string().email("Invalid email address"),
   mobileNumber: z.string().regex(/^\d{10}$/, "Mobile number must be 10 digits"),
 });
@@ -47,8 +47,6 @@ const ManageOpAdmin = () => {
           },
         }
       );
-      print(data);
-      print(response.data);
       toast.success(
         response.data.msg || "Operational Admin created successfully"
       );

@@ -36,7 +36,7 @@ const AdminSidebar = ({ expanded, setExpanded, setCurrentView }) => {
             <SideBarItems
               expanded={expanded}
               icon={<FaFileAlt size={20} />}
-              text="Manage Op Admin"
+              text="Create Op Admin"
               onClick={() => handleItemClick('ManageOpAdmin')}
               selected={selected === 'ManageOpAdmin'}
             />
@@ -48,6 +48,15 @@ const AdminSidebar = ({ expanded, setExpanded, setCurrentView }) => {
             onClick={() => handleItemClick('ManageRides')}
             selected={selected === 'ManageRides'}
           />
+          {userType === 'admin' && (
+          <SideBarItems
+            expanded={expanded}
+            icon={<FaUsers size={20} />}
+            text="View Users"
+            onClick={() => handleItemClick('ViewUsers')}
+            selected={selected === 'ViewUsers'}
+          />
+          )}
           <hr className="my-3" />
           <SideBarItems
             expanded={expanded}
@@ -56,6 +65,7 @@ const AdminSidebar = ({ expanded, setExpanded, setCurrentView }) => {
             onClick={handleLogout}
             selected={selected === 'Logout'}
           />
+
         </ul>
       </nav>
     </aside>

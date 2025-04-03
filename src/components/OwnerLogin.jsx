@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 
 const phoneNumberSchema = z.object({
-  phoneNumber: z.string().length(10, 'Phone number must be exactly 10 digits'),
+  phoneNumber: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
 });
 
 const otpSchema = phoneNumberSchema.extend({

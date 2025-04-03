@@ -16,7 +16,7 @@ const fleetSchema = z.object({
     .string()
     .regex(
       /^[A-Z]{2}[ -][0-9]{1,2}(?:[A-Z])?(?:[A-Z]*)?[0-9]{4}$/,
-      "Invalid license number"
+      "Invaid number plate"
     ),
   year: z.number().min(1900, "Year must be valid"),
   desc: z.string().min(1, "Description is required"),
@@ -242,7 +242,7 @@ const Fleet = () => {
           </div>
           <div>
             <label htmlFor="number" className="block font-bold">
-              License Number:
+              Number Plate:
             </label>
             <input
               type="text"
@@ -448,7 +448,7 @@ const Fleet = () => {
                 </div>
                 <div>
                   <label htmlFor="number" className="block font-bold">
-                    License Number:
+                    Number Plate:
                   </label>
                   <input
                     type="text"
@@ -540,7 +540,7 @@ const Fleet = () => {
                   <strong>Passenger Seats:</strong> {fleet.seats}
                 </p>
                 <p>
-                  <strong>License Number:</strong> {fleet.number}
+                  <strong>Number Plate:</strong> {fleet.number}
                 </p>
                 <p>
                   <strong>Year:</strong> {fleet.year}

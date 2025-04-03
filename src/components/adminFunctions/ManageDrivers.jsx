@@ -1,170 +1,247 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { FaTrashAlt, FaBan, FaCheck } from "react-icons/fa"; // Import FaCheck for unblock icon
 import axios from "axios";
-import { FaTrashAlt, FaBan } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-const ManageDrivers = () => {
-  const [drivers, setDrivers] = useState([]); // Ensure drivers is initialized as an empty array
-  const [loading, setLoading] = useState(true); // Add a loading state
-  const [selectedDriver, setSelectedDriver] = useState(null); // State to hold selected driver details
+const ViewDriver = () => {
+  const [drivers, setDrivers] = useState([]);
+  const [vehicleDetails, setVehicleDetails] = useState({});
+  const [filteredDrivers, setFilteredDrivers] = useState([]);
+  const [filters, setFilters] = useState({ status: "", isAvailable: "" });
 
-  useEffect(() => {
-    fetchDrivers();
-  }, []);
-
+  // Fetch all drivers from the backend
   const fetchDrivers = async () => {
     try {
-      setLoading(true); // Set loading to true before fetching
-      const response = await axios.get("/api/admin/allDrivers", {
+      const response = await axios.get("/api/owner/allDrivers", {
         headers: {
           authtoken: localStorage.getItem("token"),
           role: localStorage.getItem("userType"),
         },
       });
-      setDrivers(response.data.drivers || []); // Ensure drivers is always an array
-    } catch (error) {
-      toast.error("Error fetching drivers");
-      console.error("Error fetching drivers:", error);
-    } finally {
-      setLoading(false); // Set loading to false after fetching
+      console.log(response.data.drivers);
+      setDrivers(response.data.drivers);
+    } catch (err) {
+      toast.error(err.response?.data?.msg || "Failed to fetch drivers");
     }
   };
 
-  const fetchDriverDetails = async (driverId) => {
-    try {
-      const response = await axios.get(`/api/admin/driver/${driverId}`, {
-        headers: {
-          authtoken: localStorage.getItem("token"),
-          role: localStorage.getItem("userType"),
-        },
-      });
-      setSelectedDriver(response.data.driver); // Set the selected driver details
-    } catch (error) {
-      toast.error(
-        error.response?.data?.msg + error.response?.data?.error ||
-          "Error fetching driver details"
+
+  const applyFilters = () => {
+    let filtered = drivers;
+
+    if (filters.status) {
+      filtered = filtered.filter((driver) => driver.status === filters.status);
+    }
+
+    if (filters.isAvailable) {
+      const isAvailableBool = filters.isAvailable === "true";
+      filtered = filtered.filter(
+        (driver) => driver.isAvailable === isAvailableBool
       );
-      console.error("Error fetching driver details:", error);
+    }
+
+    setFilteredDrivers(filtered);
+  };
+  useEffect(() => {
+    applyFilters();
+  }, [filters, drivers]);
+
+  // Handle filter changes
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Fetch vehicle details for a specific driver
+  const fetchVehicleDetails = async (driverId) => {
+    try {
+      const response = await axios.get(`/api/driver/getVehicle/${driverId}`, {
+        headers: {
+          authtoken: localStorage.getItem("token"),
+          role: localStorage.getItem("userType"),
+        },
+      });
+      setVehicleDetails((prev) => ({
+        ...prev,
+        [driverId]: response.data.vehicle,
+      }));
+    } catch (err) {
+      toast.error(err.response?.data?.msg || "Failed to fetch vehicle details");
     }
   };
 
-  const blockDriver = async (driverId) => {
+  // Block a driver
+  const handleBlock = async (id) => {
     try {
       if (!window.confirm("Are you sure you want to block this driver?")) {
         return;
       }
-      await axios.put(`/api/admin/blockDriver/${driverId}`, {
-        headers: {
-          authtoken: localStorage.getItem("token"),
-          role: localStorage.getItem("userType"),
-        },
-      });
+      await axios.put(
+        `/api/admin/blockDriver/${id}`,
+        {},
+        {
+          headers: {
+            authtoken: localStorage.getItem("token"),
+            role: localStorage.getItem("userType"),
+          },
+        }
+      );
       toast.success("Driver blocked successfully");
-      fetchDrivers(); // Refresh the list
-    } catch (error) {
-      toast.error("Error blocking driver");
-      console.error("Error blocking driver:", error);
+      setDrivers(
+        drivers.map((driver) =>
+          driver._id === id ? { ...driver, status: "blocked" } : driver
+        )
+      );
+    } catch (err) {
+      toast.error(err.response?.data?.msg || "Failed to block driver");
     }
   };
 
-  const deleteDriver = async (driverId) => {
+  // Unblock a driver
+
+  // Delete a driver
+  const handleDelete = async (id) => {
     try {
       if (!window.confirm("Are you sure you want to delete this driver?")) {
         return;
       }
-      await axios.delete(`/api/admin/deleteDriver/${driverId}`, {
+      await axios.delete(`/api/admin/deleteDriver/${id}`, {
         headers: {
           authtoken: localStorage.getItem("token"),
           role: localStorage.getItem("userType"),
         },
       });
       toast.success("Driver deleted successfully");
-      fetchDrivers(); // Refresh the list
-    } catch (error) {
-      toast.error("Error deleting driver");
-      console.error("Error deleting driver:", error);
+      setDrivers(drivers.filter((driver) => driver._id !== id));
+    } catch (err) {
+      toast.error(err.response?.data?.msg || "Failed to delete driver");
     }
   };
 
-  if (loading) {
-    return <div className="p-4">Loading Drivers...</div>; // Show a loading message while fetching
-  }
-
-  if (drivers.length === 0) {
-    return <div className="p-4">No Drivers found.</div>; // Handle the case where no drivers are available
-  }
+  useEffect(() => {
+    fetchDrivers();
+  }, []);
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Manage Drivers</h2>
-      <div className="space-y-4">
-        {drivers.map((driver) => (
+      <h2 className="text-2xl font-bold mb-4">View Drivers</h2>
+
+      <div className="mb-4 flex space-x-4">
+        <select
+          name="status"
+          value={filters.status}
+          onChange={handleFilterChange}
+          className="border p-2 rounded"
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="blocked">Blocked</option>
+        </select>
+        <select
+          name="isAvailable"
+          value={filters.isAvailable}
+          onChange={handleFilterChange}
+          className="border p-2 rounded"
+        >
+          <option value="">All Availability</option>
+          <option value="true">Available</option>
+          <option value="false">Unavailable</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        {filteredDrivers.map((driver) => (
           <div
             key={driver._id}
-            className="p-4 border rounded shadow-sm flex justify-between items-center cursor-pointer"
-            onClick={() => fetchDriverDetails(driver._id)} // Fetch driver details on click
+            className="p-4 border rounded shadow-sm flex flex-col space-y-2"
           >
-            <div>
-              <p>
-                <strong>Name:</strong> {driver.name}
-              </p>
-              <p>
-                <strong>Mobile Number:</strong> {driver.mobileNumber}
-              </p>
+            <div className="flex justify-between items-center">
+              <div>
+                <p>
+                  <strong>Driver ID:</strong> {driver._id}
+                </p>
+                <p>
+                  <strong>Name:</strong> {driver.name}
+                </p>
+                <p>
+                  <strong>Address:</strong> {driver.address || "N/A"}
+                </p>
+                <p>
+                  <strong>Phone Number:</strong> {driver.mobileNumber}
+                </p>
+                <p>
+                  <strong>Aadhaar Number:</strong> {driver.aadhaarNumber}
+                </p>
+                <p>
+                  <strong>License Number:</strong> {driver.licenseNumber}
+                </p>
+                <p>
+                  <strong>Verified:</strong> {driver.isVerified.toString()}
+                </p>
+                <p>
+                  <strong>Available:</strong> {driver.isAvailable.toString()}
+                </p>
+                <p>
+                  <strong>Status:</strong> {driver.status}
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                {driver.status === "blocked" ? (
+                  null
+                ) : (
+                  <button
+                    className="bg-yellow-500 text-white py-1 px-3 rounded"
+                    onClick={() => handleBlock(driver._id)}
+                  >
+                    <FaBan />
+                  </button>
+                )}
+                <button
+                  className="bg-red-500 text-white py-1 px-3 rounded"
+                  onClick={() => handleDelete(driver._id)}
+                >
+                  <FaTrashAlt />
+                </button>
+              </div>
             </div>
-            <div className="flex space-x-2">
+            <div>
               <button
-                className="bg-yellow-500 text-white py-1 px-3 rounded"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering the card click
-                  blockDriver(driver._id);
-                }}
+                className="bg-blue-500 text-white py-1 px-3 rounded"
+                onClick={() => fetchVehicleDetails(driver._id)}
               >
-                <FaBan /> Block
+                Show Vehicle Details
               </button>
-              <button
-                className="bg-red-500 text-white py-1 px-3 rounded"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering the card click
-                  deleteDriver(driver._id);
-                }}
-              >
-                <FaTrashAlt /> Delete
-              </button>
+              {vehicleDetails[driver._id] && (
+                <div className="mt-2 p-2 border rounded bg-gray-100">
+                  <p>
+                    <strong>Model:</strong> {vehicleDetails[driver._id].model}
+                  </p>
+                  <p>
+                    <strong>Brand:</strong> {vehicleDetails[driver._id].brand}
+                  </p>
+                  <p>
+                    <strong>Type:</strong> {vehicleDetails[driver._id].type}
+                  </p>
+                  <p>
+                    <strong>Seats:</strong> {vehicleDetails[driver._id].seats}
+                  </p>
+                  <p>
+                    <strong>Number:</strong> {vehicleDetails[driver._id].number}
+                  </p>
+                  <p>
+                    <strong>Year:</strong> {vehicleDetails[driver._id].year}
+                  </p>
+                  <p>
+                    <strong>Description:</strong>{" "}
+                    {vehicleDetails[driver._id].desc}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
-
-      {/* Modal or Section to Show Selected Driver Details */}
-      {selectedDriver && (
-        <div className="mt-6 p-4 border rounded shadow-lg bg-white">
-          <h3 className="text-xl font-bold mb-2">Driver Details</h3>
-          <p>
-            <strong>Name:</strong> {selectedDriver.name}
-          </p>
-          <p>
-            <strong>Email:</strong> {selectedDriver.email}
-          </p>
-          <p>
-            <strong>Mobile Number:</strong> {selectedDriver.mobileNumber}
-          </p>
-          <p>
-            <strong>Verified:</strong> {selectedDriver.isVerified.toString()}
-          </p>
-          <p>
-            <strong>Owner:</strong> {selectedDriver.owner?.name || "N/A"}
-          </p>
-          <button
-            className="mt-4 bg-gray-500 text-white py-1 px-3 rounded"
-            onClick={() => setSelectedDriver(null)} // Close the details view
-          >
-            Close
-          </button>
-        </div>
-      )}
     </div>
   );
 };
 
-export default ManageDrivers;
+export default ViewDriver;

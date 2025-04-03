@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 
 const phoneNumberSchema = z.object({
-  phoneNumber: z.string().length(10, 'Phone number must be exactly 10 digits'),
+  phoneNumber: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
 });
 
 const otpSchema = phoneNumberSchema.extend({
@@ -25,20 +25,20 @@ const AdminLogin = () => {
 
   const handleSendOtp = async (data) => {
     try {
-      await axios.post('/api/auth/send-otp', { mobileNumber: data.phoneNumber, role: adminType });
+      await axios.post('/api/auth/send-otp', { mobileNumber: `+91${data.phoneNumber}`, role: adminType });
       setIsOtpSent(true);
       toast.success('OTP sent successfully');
     } catch (err) {
       toast.error(err.response?.data?.msg || 'Failed to send OTP');
     } finally {
-      reset({ mobileNumber: data.phoneNumber });
+      reset({ mobileNumber: `+91${data.phoneNumber}` });
     }
   };
 
   const handleLogin = async (data) => {
     try {
       const response = await axios.post('/api/auth/login', {
-        mobileNumber: data.phoneNumber,
+        mobileNumber: `+91${data.phoneNumber}`,
         otp: data.otp,
         role: adminType,
       });

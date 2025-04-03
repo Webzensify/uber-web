@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Header from '../../components/Header.jsx';
-import { ManageDrivers, ManageOpAdmin, ManageRides } from '../../components/adminFunctions/index.js';
+import { ManageDrivers, ManageOpAdmin, ManageRides,ViewUsers } from '../../components/adminFunctions/index.js';
 import AdminSidebar from '../../components/AdminSidebar.jsx';
 
 const AdminDashboard = () => {
@@ -15,6 +15,8 @@ const AdminDashboard = () => {
         return <ManageOpAdmin />;
       case 'ManageRides':
         return <ManageRides />;
+      case 'ViewUsers':
+        return <ViewUsers />;
       default:
         return <div />;
     }

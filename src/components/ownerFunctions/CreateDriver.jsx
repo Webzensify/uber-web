@@ -7,16 +7,18 @@ import { toast } from "react-toastify";
 
 const schema = z.object({
   mobileNumber: z
-    .string()
-    .length(10, "Mobile number must be exactly 10 digits"),
+    .string().regex(/^[0-9]{10}$/, "Mobile number must be exactly 10 digits"),
   otp: z.string().length(6, "OTP must be exactly 6 digits").optional(),
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Name is required").regex(/^[a-zA-Z ]*$/, "Name must contain only letters"),
   address: z.string().min(1, "Address is required"),
   aadhaarNumber: z
     .string()
     .length(12, "Aadhaar number must be exactly 12 digits"),
   licenseNumber: z.string().min(1, "License number is required"),
-  email: z.string().email("Invalid email address"),
+  email: z.union( [
+    z.literal( '' ),
+    z.string().email(),
+] ),
 });
 
 const CreateDriver = () => {
