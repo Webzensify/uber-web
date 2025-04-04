@@ -12,7 +12,7 @@ const ViewDriver = () => {
   // Fetch all drivers from the backend
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get("/api/owner/allDrivers", {
+      const response = await axios.get("/api/admin/allDrivers", {
         headers: {
           authtoken: localStorage.getItem("token"),
           role: localStorage.getItem("userType"),
@@ -25,6 +25,33 @@ const ViewDriver = () => {
     }
   };
 
+  // Add this function below the `handleBlock` function
+
+  const handleUnblock = async (id) => {
+    try {
+      if (!window.confirm("Are you sure you want to unblock this driver?")) {
+        return;
+      }
+      await axios.put(
+        `/api/admin/unblockDriver/${id}`,
+        {},
+        {
+          headers: {
+            authtoken: localStorage.getItem("token"),
+            role: localStorage.getItem("userType"),
+          },
+        }
+      );
+      toast.success("Driver unblocked successfully");
+      setDrivers(
+        drivers.map((driver) =>
+          driver._id === id ? { ...driver, status: "active" } : driver
+        )
+      );
+    } catch (err) {
+      toast.error(err.response?.data?.msg || "Failed to unblock driver");
+    }
+  };
 
   const applyFilters = () => {
     let filtered = drivers;
@@ -137,16 +164,6 @@ const ViewDriver = () => {
           <option value="active">Active</option>
           <option value="blocked">Blocked</option>
         </select>
-        <select
-          name="isAvailable"
-          value={filters.isAvailable}
-          onChange={handleFilterChange}
-          className="border p-2 rounded"
-        >
-          <option value="">All Availability</option>
-          <option value="true">Available</option>
-          <option value="false">Unavailable</option>
-        </select>
       </div>
       <div className="grid grid-cols-1 gap-4">
         {filteredDrivers.map((driver) => (
@@ -185,8 +202,14 @@ const ViewDriver = () => {
                 </p>
               </div>
               <div className="flex space-x-2">
+
                 {driver.status === "blocked" ? (
-                  null
+                  <button
+                    className="bg-green-500 text-white py-1 px-3 rounded"
+                    onClick={() => handleUnblock(driver._id)}
+                  >
+                    <FaCheck />
+                  </button>
                 ) : (
                   <button
                     className="bg-yellow-500 text-white py-1 px-3 rounded"
