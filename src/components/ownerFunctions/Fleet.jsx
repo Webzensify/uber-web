@@ -8,27 +8,28 @@ import { toast } from "react-toastify";
 
 const fleetSchema = z.object({
   _id: z.string().optional(),
-  model: z.string().min(1, "Model is required"),
+  type: z.enum(["sedan", "hatchback", "suv"], "Type is required"),
   brand: z.string().min(1, "Brand is required"),
-  type: z.string().min(1, "Type is required"),
-  seats: z.number().min(1, "Seats must be at least 1"),
+  model: z.string().min(1, "Model is required"),
+  seats: z.number("Seats is required"),
   number: z
     .string()
     .regex(
-      /^[A-Z]{2}[ -][0-9]{1,2}(?:[A-Z])?(?:[A-Z]*)?[0-9]{4}$/,
-      "Invaid number plate"
-    ),
-  year: z.number().min(1900, "Year must be valid"),
+      /^[A-Z]{2}[0-9]{1,2}[A-Z]?[A-Z]*[0-9]{4}$/,
+      "Invalid number plate"
+    )
+    .min(1, "Number plate is required"),
   desc: z.string().min(1, "Description is required"),
+  year: z.number("Year is required"),
+  acStatus: z.enum(["on", "off"], "AC Status is required"),
+  status: z.enum(["available", "engaged"], "Status is required").optional(),
 });
 
 const Fleet = () => {
   const [fleets, setFleets] = useState([]);
   const [filteredFleets, setFilteredFleets] = useState([]);
   const [filter, setFilter] = useState({
-    model: "",
-    brand: "",
-    type: "",
+    status: "",
   });
   const [editingFleetId, setEditingFleetId] = useState(null);
   const [isAddingFleet, setIsAddingFleet] = useState(false);
@@ -58,20 +59,18 @@ const Fleet = () => {
   };
 
   const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilter((prev) => ({ ...prev, [name]: value }));
-
+    const { value } = e.target;
+  
+    // Update the filter state
+    setFilter((prev) => ({ ...prev, status: value }));
+  
+    // Filter the fleets directly using the new value
     const filtered = fleets.filter((fleet) => {
-      return (
-        (filter.model === "" || fleet.model === filter.model) &&
-        (filter.brand === "" || fleet.brand === filter.brand) &&
-        (filter.type === "" || fleet.type === filter.type)
-      );
+      return value === "" || fleet.status.toLowerCase() === value.toLowerCase();
     });
-
+  
     setFilteredFleets(filtered);
   };
-
   const handleAddFleet = async (data) => {
     try {
       if (!window.confirm("Are you sure you want to add this vehicle?")) {
@@ -174,42 +173,6 @@ const Fleet = () => {
           className="space-y-4 border p-4 rounded shadow-sm"
         >
           <div>
-            <label htmlFor="model" className="block font-bold">
-              Model
-            </label>
-            <select
-              id="model"
-              {...register("model")}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">Select Model</option>
-              <option value="Sedan">Sedan</option>
-              <option value="SUV">SUV</option>
-              <option value="Hatchback">Hatchback</option>
-            </select>
-            {errors.model && (
-              <p className="text-red-500 text-xs">{errors.model.message}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="brand" className="block font-bold">
-              Brand
-            </label>
-            <select
-              id="brand"
-              {...register("brand")}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">Select Brand</option>
-              <option value="Toyota">Toyota</option>
-              <option value="Honda">Honda</option>
-              <option value="Ford">Ford</option>
-            </select>
-            {errors.brand && (
-              <p className="text-red-500 text-xs">{errors.brand.message}</p>
-            )}
-          </div>
-          <div>
             <label htmlFor="type" className="block font-bold">
               Type
             </label>
@@ -219,30 +182,70 @@ const Fleet = () => {
               className="w-full p-2 border rounded"
             >
               <option value="">Select Type</option>
-              <option value="Manual">Manual</option>
-              <option value="Automatic">Automatic</option>
+              <option value="sedan">Sedan</option>
+              <option value="hatchback">Hatchback</option>
+              <option value="suv">SUV</option>
             </select>
             {errors.type && (
               <p className="text-red-500 text-xs">{errors.type.message}</p>
             )}
           </div>
           <div>
+            <label htmlFor="brand" className="block font-bold">
+              Brand
+            </label>
+            <input
+              type="text"
+              id="brand"
+              {...register("brand")}
+              className="w-full p-2 border rounded"
+            />
+            {errors.brand && (
+              <p className="text-red-500 text-xs">{errors.brand.message}</p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="model" className="block font-bold">
+              Model
+            </label>
+            <input
+              type="text"
+              id="model"
+              {...register("model")}
+              className="w-full p-2 border rounded"
+            />
+            {errors.model && (
+              <p className="text-red-500 text-xs">{errors.model.message}</p>
+            )}
+          </div>
+          <div>
             <label htmlFor="seats" className="block font-bold">
               Passenger Seats
             </label>
-            <input
-              type="number"
+            <select
               id="seats"
               {...register("seats", { valueAsNumber: true })}
               className="w-full p-2 border rounded"
-            />
+            >
+              <option value={null}>Select Seats</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
             {errors.seats && (
-              <p className="text-red-500 text-xs">{errors.seats.message}</p>
+              <p className="text-red-500 text-xs">
+                {errors.seats.message}
+              </p>
             )}
           </div>
           <div>
             <label htmlFor="number" className="block font-bold">
-              Number Plate:
+              Number Plate
             </label>
             <input
               type="text"
@@ -252,20 +255,6 @@ const Fleet = () => {
             />
             {errors.number && (
               <p className="text-red-500 text-xs">{errors.number.message}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="year" className="block font-bold">
-              Year
-            </label>
-            <input
-              type="number"
-              id="year"
-              {...register("year", { valueAsNumber: true })}
-              className="w-full p-2 border rounded"
-            />
-            {errors.year && (
-              <p className="text-red-500 text-xs">{errors.year.message}</p>
             )}
           </div>
           <div>
@@ -281,6 +270,48 @@ const Fleet = () => {
               <p className="text-red-500 text-xs">{errors.desc.message}</p>
             )}
           </div>
+          <div>
+            <label htmlFor="year" className="block font-bold">
+              Year
+            </label>
+            <select
+              id="year"
+              {...register("year", { valueAsNumber: true })}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Select Year</option>
+              {Array.from({ length: 22 }, (_, i) => {
+                const year = new Date().getFullYear() - i;
+                return (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                );
+              })}
+            </select>
+            {errors.year && (
+              <p className="text-red-500 text-xs">
+                {errors.year.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="acStatus" className="block font-bold">
+              AC Status
+            </label>
+            <select
+              id="acStatus"
+              {...register("acStatus")}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Select AC Status</option>
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+            {errors.acStatus && (
+              <p className="text-red-500 text-xs">{errors.acStatus.message}</p>
+            )}
+          </div>
           <button
             type="submit"
             className="bg-blue-500 text-white py-2 px-4 rounded"
@@ -293,57 +324,22 @@ const Fleet = () => {
       {/* Filter Section */}
       <div className="flex space-x-4 mb-4">
         <div>
-          <label htmlFor="filterModel" className="block font-bold">
-            Model
+          <label htmlFor="filterStatus" className="block font-bold">
+            Status
           </label>
           <select
-            id="filterModel"
-            name="model"
-            value={filter.model}
+            id="filterStatus"
+            name="status"
+            value={filter.status}
             onChange={handleFilterChange}
             className="w-full p-2 border rounded"
           >
-            <option value="">All Models</option>
-            <option value="Sedan">Sedan</option>
-            <option value="SUV">SUV</option>
-            <option value="Hatchback">Hatchback</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="filterBrand" className="block font-bold">
-            Brand
-          </label>
-          <select
-            id="filterBrand"
-            name="brand"
-            value={filter.brand}
-            onChange={handleFilterChange}
-            className="w-full p-2 border rounded"
-          >
-            <option value="">All Brands</option>
-            <option value="Toyota">Toyota</option>
-            <option value="Honda">Honda</option>
-            <option value="Ford">Ford</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="filterType" className="block font-bold">
-            Type
-          </label>
-          <select
-            id="filterType"
-            name="type"
-            value={filter.type}
-            onChange={handleFilterChange}
-            className="w-full p-2 border rounded"
-          >
-            <option value="">All Types</option>
-            <option value="Manual">Manual</option>
-            <option value="Automatic">Automatic</option>
+            <option value="">All Status</option>
+            <option value="available">Available</option>
+            <option value="engaged">Engaged</option>
           </select>
         </div>
       </div>
-
       {/* Fleet List */}
       <div className="space-y-4">
         {filteredFleets.map((fleet) => (
@@ -361,46 +357,8 @@ const Fleet = () => {
                   {...register("_id")}
                   defaultValue={fleet._id}
                 />
-                <div>
-                  <label htmlFor="model" className="block font-bold">
-                    Model
-                  </label>
-                  <select
-                    id="model"
-                    {...register("model")}
-                    defaultValue={fleet.model}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Hatchback">Hatchback</option>
-                  </select>
-                  {errors.model && (
-                    <p className="text-red-500 text-xs">
-                      {errors.model.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="brand" className="block font-bold">
-                    Brand
-                  </label>
-                  <select
-                    id="brand"
-                    {...register("brand")}
-                    defaultValue={fleet.brand}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="Toyota">Toyota</option>
-                    <option value="Honda">Honda</option>
-                    <option value="Ford">Ford</option>
-                  </select>
-                  {errors.brand && (
-                    <p className="text-red-500 text-xs">
-                      {errors.brand.message}
-                    </p>
-                  )}
-                </div>
+
+                {/* Type */}
                 <div>
                   <label htmlFor="type" className="block font-bold">
                     Type
@@ -411,15 +369,51 @@ const Fleet = () => {
                     defaultValue={fleet.type}
                     className="w-full p-2 border rounded"
                   >
-                    <option value="Manual">Manual</option>
-                    <option value="Automatic">Automatic</option>
+                    <option value="">Select Type</option>
+                    <option value="sedan">Sedan</option>
+                    <option value="hatchback">Hatchback</option>
+                    <option value="suv">SUV</option>
                   </select>
                   {errors.type && (
-                    <p className="text-red-500 text-xs">
-                      {errors.type.message}
-                    </p>
+                    <p className="text-red-500 text-xs">{errors.type.message}</p>
                   )}
                 </div>
+
+                {/* Brand */}
+                <div>
+                  <label htmlFor="brand" className="block font-bold">
+                    Brand
+                  </label>
+                  <input
+                    type="text"
+                    id="brand"
+                    {...register("brand")}
+                    defaultValue={fleet.brand}
+                    className="w-full p-2 border rounded"
+                  />
+                  {errors.brand && (
+                    <p className="text-red-500 text-xs">{errors.brand.message}</p>
+                  )}
+                </div>
+
+                {/* Model */}
+                <div>
+                  <label htmlFor="model" className="block font-bold">
+                    Model
+                  </label>
+                  <input
+                    type="text"
+                    id="model"
+                    {...register("model")}
+                    defaultValue={fleet.model}
+                    className="w-full p-2 border rounded"
+                  />
+                  {errors.model && (
+                    <p className="text-red-500 text-xs">{errors.model.message}</p>
+                  )}
+                </div>
+
+                {/* Seats */}
                 <div>
                   <label htmlFor="seats" className="block font-bold">
                     Passenger Seats
@@ -441,14 +435,14 @@ const Fleet = () => {
                     <option value="8">8</option>
                   </select>
                   {errors.seats && (
-                    <p className="text-red-500 text-xs">
-                      {errors.seats.message}
-                    </p>
+                    <p className="text-red-500 text-xs">{errors.seats.message}</p>
                   )}
                 </div>
+
+                {/* Number Plate */}
                 <div>
                   <label htmlFor="number" className="block font-bold">
-                    Number Plate:
+                    Number Plate
                   </label>
                   <input
                     type="text"
@@ -458,37 +452,11 @@ const Fleet = () => {
                     className="w-full p-2 border rounded"
                   />
                   {errors.number && (
-                    <p className="text-red-500 text-xs">
-                      {errors.number.message}
-                    </p>
+                    <p className="text-red-500 text-xs">{errors.number.message}</p>
                   )}
                 </div>
-                <div>
-                  <label htmlFor="year" className="block font-bold">
-                    Year
-                  </label>
-                  <select
-                    id="year"
-                    {...register("year", { valueAsNumber: true })}
-                    defaultValue={fleet.year}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="">Select Year</option>
-                    {Array.from({ length: 30 }, (_, i) => {
-                      const year = new Date().getFullYear() - i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  {errors.year && (
-                    <p className="text-red-500 text-xs">
-                      {errors.year.message}
-                    </p>
-                  )}
-                </div>
+
+                {/* Description */}
                 <div>
                   <label htmlFor="desc" className="block font-bold">
                     Description
@@ -500,11 +468,57 @@ const Fleet = () => {
                     className="w-full p-2 border rounded"
                   />
                   {errors.desc && (
-                    <p className="text-red-500 text-xs">
-                      {errors.desc.message}
-                    </p>
+                    <p className="text-red-500 text-xs">{errors.desc.message}</p>
                   )}
                 </div>
+
+                {/* Year */}
+                <div>
+                  <label htmlFor="year" className="block font-bold">
+                    Year
+                  </label>
+                  <select
+                    id="year"
+                    {...register("year", { valueAsNumber: true })}
+                    defaultValue={fleet.year}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select Year</option>
+                    {Array.from({ length: 22 }, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {errors.year && (
+                    <p className="text-red-500 text-xs">{errors.year.message}</p>
+                  )}
+                </div>
+
+                {/* AC Status */}
+                <div>
+                  <label htmlFor="acStatus" className="block font-bold">
+                    AC Status
+                  </label>
+                  <select
+                    id="acStatus"
+                    {...register("acStatus")}
+                    defaultValue={fleet.acStatus}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select AC Status</option>
+                    <option value="on">On</option>
+                    <option value="off">Off</option>
+                  </select>
+                  {errors.acStatus && (
+                    <p className="text-red-500 text-xs">{errors.acStatus.message}</p>
+                  )}
+                </div>
+
+                {/* Buttons */}
                 <div className="flex space-x-2">
                   <button
                     type="submit"
@@ -524,17 +538,13 @@ const Fleet = () => {
             ) : (
               <div className="flex-1">
                 <p>
-                  <strong>Fleet Id:</strong>
-                  {fleet._id}
-                </p>
-                <p>
-                  <strong>Model:</strong> {fleet.model}
+                  <strong>Type:</strong> {fleet.type}
                 </p>
                 <p>
                   <strong>Brand:</strong> {fleet.brand}
                 </p>
                 <p>
-                  <strong>Type:</strong> {fleet.type}
+                  <strong>Model:</strong> {fleet.model}
                 </p>
                 <p>
                   <strong>Passenger Seats:</strong> {fleet.seats}
@@ -543,10 +553,16 @@ const Fleet = () => {
                   <strong>Number Plate:</strong> {fleet.number}
                 </p>
                 <p>
+                  <strong>Description:</strong> {fleet.desc}
+                </p>
+                <p>
                   <strong>Year:</strong> {fleet.year}
                 </p>
                 <p>
-                  <strong>Description:</strong> {fleet.desc}
+                  <strong>AC Status:</strong> {fleet.acStatus}
+                </p>
+                <p>
+                  <strong>Status:</strong> {fleet.status}
                 </p>
               </div>
             )}
