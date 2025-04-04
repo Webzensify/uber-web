@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const Profile = () => {
-  const { user, userType, logout, setUser } = useAuth(); // Added setUser from AuthContext
+  const { user, userType, logout, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
