@@ -220,16 +220,6 @@ const ViewDriver = () => {
           <option value="active">Active</option>
           <option value="blocked">Blocked</option>
         </select>
-        <select
-          name="isAvailable"
-          value={filters.isAvailable}
-          onChange={handleFilterChange}
-          className="border p-2 rounded"
-        >
-          <option value="">All Availability</option>
-          <option value="true">Available</option>
-          <option value="false">Unavailable</option>
-        </select>
       </div>
       <div className="grid grid-cols-1 gap-4">
 
@@ -320,9 +310,6 @@ const ViewDriver = () => {
                 </p>
                 <p>
                   <strong>Verified:</strong> {driver.isVerified.toString()}
-                </p>
-                <p>
-                  <strong>Available:</strong> {driver.isAvailable.toString()}
                 </p>
                 <p>
                   <strong>Email:</strong> {driver.email || "N/A"}
