@@ -60,15 +60,15 @@ const Fleet = () => {
 
   const handleFilterChange = (e) => {
     const { value } = e.target;
-  
+
     // Update the filter state
     setFilter((prev) => ({ ...prev, status: value }));
-  
+
     // Filter the fleets directly using the new value
     const filtered = fleets.filter((fleet) => {
       return value === "" || fleet.status.toLowerCase() === value.toLowerCase();
     });
-  
+
     setFilteredFleets(filtered);
   };
   const handleAddFleet = async (data) => {
@@ -312,6 +312,7 @@ const Fleet = () => {
               <p className="text-red-500 text-xs">{errors.acStatus.message}</p>
             )}
           </div>
+
           <button
             type="submit"
             className="bg-blue-500 text-white py-2 px-4 rounded"
@@ -515,6 +516,24 @@ const Fleet = () => {
                   </select>
                   {errors.acStatus && (
                     <p className="text-red-500 text-xs">{errors.acStatus.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="status" className="block font-bold">
+                    Status
+                  </label>
+                  <select
+                    id="status"
+                    {...register("status")}
+                    defaultValue={fleet.status}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select Status</option>
+                    <option value="available">Available</option>
+                    <option value="engaged">Engaged</option>
+                  </select>
+                  {errors.status && (
+                    <p className="text-red-500 text-xs">{errors.status.message}</p>
                   )}
                 </div>
 

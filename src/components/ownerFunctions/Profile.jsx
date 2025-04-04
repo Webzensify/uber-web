@@ -33,8 +33,13 @@ const Profile = () => {
 
       // Update the user in AuthContext and localStorage
       const updatedUser = response.data.owner;
-      setUser(updatedUser);
-      console.log(updatedUser)
+      try {
+        setUser(updatedUser);
+      } catch (error) {
+        console.error("Error updating user in localStorage:", error);
+        
+      }
+
       localStorage.setItem("user", JSON.stringify(updatedUser)); // Update localStorage
 
       toast.success(response.data.msg || "Profile updated successfully");

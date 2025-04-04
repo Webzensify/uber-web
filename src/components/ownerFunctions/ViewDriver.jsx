@@ -53,14 +53,16 @@ const ViewDriver = () => {
     setValue("aadhaarNumber", driver.aadhaarNumber);
     setValue("email", driver.email);
   };
-  const handleEditSubmit = async (e) => {
+  
+
+  const handleEditSubmit = async (data) => {
     try {
       if (!window.confirm("Are you sure you want to update this driver?")) {
         return;
       }
       const response = await axios.put(
         `/api/owner/editDriver/${editingDriverId}`,
-        editFormData,
+        data, // Use the data from react-hook-form
         {
           headers: {
             authtoken: localStorage.getItem("token"),
@@ -75,7 +77,7 @@ const ViewDriver = () => {
         )
       );
       setEditingDriverId(null);
-      setEditFormData({});
+      reset(); // Reset the form after submission
     } catch (err) {
       toast.error(err.response?.data?.msg || "Failed to update driver");
     }
@@ -321,6 +323,9 @@ const ViewDriver = () => {
                 </p>
                 <p>
                   <strong>Available:</strong> {driver.isAvailable.toString()}
+                </p>
+                <p>
+                  <strong>Email:</strong> {driver.email || "N/A"}
                 </p>
                 <p>
                   <strong>Status:</strong> {driver.status}
