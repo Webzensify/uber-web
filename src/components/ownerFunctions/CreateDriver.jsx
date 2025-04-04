@@ -13,8 +13,8 @@ const schema = z.object({
   address: z.string().min(1, "Address is required"),
   aadhaarNumber: z
     .string()
-    .length(12, "Aadhaar number must be exactly 12 digits"),
-  licenseNumber: z.string().min(1, "License number is required"),
+    .regex(/^[0-9]{12}$/, "Aadhaar number must be exactly 12 digits"),
+  licenseNumber: z.string().regex(/^[A-Za-z][0-9/\W/]{2,20}$/, "License number must start with a letter and be 2 to 20 characters long"),
   email: z.union( [
     z.literal( '' ),
     z.string().email(),

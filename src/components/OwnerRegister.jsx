@@ -12,9 +12,9 @@ const phoneNumberSchema = z.object({
 
 const registrationSchema = phoneNumberSchema.extend({
   otp: z.string().length(6, 'OTP must be exactly 6 digits'),
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().regex(/^[a-zA-Z ]*$/, 'Name must contain only letters'),
   address: z.string().min(1, 'Address is required'),
-  aadhaar: z.string().length(12, 'Aadhaar number must be exactly 12 digits'),
+  aadhaar: z.string().regex(/^[0-9]{12}$/, 'Aadhaar number must be exactly 12 digits'),
   email: z.string().email('Invalid email address'),
 });
 
