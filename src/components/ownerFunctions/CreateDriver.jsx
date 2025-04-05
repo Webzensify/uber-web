@@ -62,7 +62,7 @@ const CreateDriver = () => {
         .post(
           "/api/auth/addDriver",
           {
-            mobileNumber: data.mobileNumber,
+            mobileNumber: `+91${data.mobileNumber}`,
             name: data.name,
             address: data.address,
             licenseNumber: data.licenseNumber,

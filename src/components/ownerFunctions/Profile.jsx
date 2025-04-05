@@ -24,7 +24,13 @@ const Profile = () => {
       if (!window.confirm("Are you sure you want to save changes?")) {
         return;
       }
-      const response = await axios.put("/api/owner/profile", formData, {
+      const updatedFormData = {
+        ...formData,
+        mobileNumber: formData.mobileNumber.startsWith("+91")
+          ? formData.mobileNumber
+          : `+91${formData.mobileNumber}`,
+      };
+      const response = await axios.put("/api/owner/profile", updatedFormData, {
         headers: {
           authtoken: localStorage.getItem("token"),
           role: localStorage.getItem("userType"),
