@@ -20,6 +20,7 @@ const ViewUsers = () => {
           role: localStorage.getItem("userType"),
         },
       });
+      console.log("Fetched users:", response.data.users);
       setUsers(response.data.users || []); // Ensure users is always an array
       toast.success("Users fetched successfully!");
     } catch (error) {
@@ -33,16 +34,16 @@ const ViewUsers = () => {
   };
 
   if (loading) {
-    return <div className="p-4">Loading Users...</div>; // Show a loading message while fetching
+    return <div className="p-4">Loading Users...</div>;
   }
 
   if (users.length === 0) {
-    return <div className="p-4">No Users found.</div>; // Handle the case where no users are available
+    return <div className="p-4">No Users found.</div>;
   }
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">View Users</h2>
+      <h2 className="text-2xl font-bold mb-4">View Passengers</h2>
       <div className="space-y-4">
         {users.map((user) => (
           <div key={user._id} className="p-4 border rounded shadow-sm">
@@ -54,6 +55,9 @@ const ViewUsers = () => {
             </p>
             <p>
               <strong>Gender:</strong> {user.gender || "N/A"}
+            </p>
+            <p>
+              <strong>Aadhaar Number:</strong> {user.aadhaarNumber || "N/A"}
             </p>
           </div>
         ))}

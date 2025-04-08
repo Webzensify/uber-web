@@ -52,7 +52,7 @@ const AdminSidebar = ({ expanded, setExpanded, setCurrentView }) => {
           <SideBarItems
             expanded={expanded}
             icon={<FaUsers size={20} />}
-            text="View Users"
+            text="Passengers"
             onClick={() => handleItemClick('ViewUsers')}
             selected={selected === 'ViewUsers'}
           />
