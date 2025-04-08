@@ -53,7 +53,7 @@ const ViewDriver = () => {
     setValue("aadhaarNumber", driver.aadhaarNumber);
     setValue("email", driver.email);
   };
-  
+
 
   const handleEditSubmit = async (data) => {
     try {
@@ -119,6 +119,7 @@ const ViewDriver = () => {
           role: localStorage.getItem("userType"),
         },
       });
+
       setVehicleDetails((prev) => ({
         ...prev,
         [driverId]: response.data.vehicle,
@@ -317,6 +318,9 @@ const ViewDriver = () => {
                 <p>
                   <strong>Status:</strong> {driver.status}
                 </p>
+                <p>
+                  <strong>Avalability:</strong> {driver?.isAvailable ? "Online" : "Offline"}
+                </p>
                 <div className="flex space-x-2 mt-2">
                   {driver.status === "blocked" ? (
                     <button
@@ -375,6 +379,7 @@ const ViewDriver = () => {
                     <p>
                       <strong>Description:</strong> {vehicleDetails[driver._id].desc}
                     </p>
+
                   </div>
                 )}
               </div>
